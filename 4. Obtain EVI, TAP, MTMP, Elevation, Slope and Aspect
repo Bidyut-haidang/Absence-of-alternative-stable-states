@@ -1,0 +1,81 @@
+Absence of alternative stable states in vegetation cover of northeastern India, by Bidyut Sarania, 
+Vishwesha Guttal, Krishnapriya Tamma
+
+Electronic Supplementary Materials 2:  Part A: Code for obtaining remotely sensed satellite data using Google Earth Engine Platform (GEE). 
+Krishnapriya Tamma authored all of the code. 
+______________________________________________________________________________________________
+
+4. Obtaining mean EVI, total annual precipitation, median annual temperature, elevation, slope and aspect data for regression analysis
+   (Code modified from - https://mygeoblog.com/2019/07/09/scatter-plot-in-gee/)
+
+   Code link to open directly in web browser- https://code.earthengine.google.com/40af6a8273f98e5f14ba7299c8025dbd 
+
+Copy the code below to the GEE code editor and hit run to obtain pixel-wise data and export data to google drive.
+//Import region of interest 
+	//Var NE = shapefile of northeast India used in paper (A geometry was given as an example for running this code.)
+
+	//Display NE
+	Map.addLayer(ne);
+	Map.centerObject(ne,7);
+	// Load SRTM image
+	var srtm = ee.Image('CGIAR/SRTM90_V4')
+            .clip(ne);
+	var elevation = srtm.select('elevation');
+	// Apply an algorithm to an image.
+	var slope = ee.Terrain.slope(srtm);
+	// Get the aspect data in degrees
+	var aspect = ee.Terrain.aspect(srtm);
+
+//Import EVI data collection 
+	var evi_dataset = ee.ImageCollection('MODIS/006/MOD13Q1')
+                  .filterDate('2019-08-01', '2019-9-30') //2019
+                  .select('EVI')
+                  .mean() 
+                  .rename('evi')
+                   .clip(ne); 
+	//Import CHIRPS Data
+	var prec = ee.ImageCollection('UCSB-CHG/CHIRPS/DAILY')
+                  .filterDate('2019-01-01', '2019-12-31')
+                  .select('precipitation')
+                  .sum()
+                  .rename('precip')
+                  .clip(ne)
+	//Import temperature data    
+	var col_temp = ee.ImageCollection("MODIS/006/MOD11A2")
+	  .filterDate('2019-01-01', '2019-12-31')
+	  .select('LST_Day_1km')
+ 	  .median()
+	  .multiply(0.02)
+  	  .subtract(273.15)
+          .rename('temperature')
+          .clip(ne); 
+
+	//add bands 
+	  var addBands0 = elevation.addBands(evi_dataset); 
+	  var addBands = aspect.addBands(addBands0); //how to add three bands? 
+	  var addBands1 = slope.addBands(addBands);
+	  var addBands2 = prec.addBands(addBands1);
+          var addBands3 = col_temp.addBands(addBands2);
+//print(addBands1)
+	  //sample N points from the 2-band image
+          var scale = Map.getScale();  
+          //print(scale) 
+          var values = addBands3.sample({ region: ne, scale: 1000, numPixels: 1e13, geometries: true});  
+          //print(values); 
+
+          //Get co-ordinates pixel
+          //Modified from https://stackoverflow.com/questions/63443272/extract-the-values-for-all-pixels-in-a-polygon-in-google-earth-engine
+
+          var lat_long = values.map(function (feature) {
+          var coordinates = feature.geometry().transform('epsg:4326').coordinates();
+          return feature.set('lon', coordinates.get(0), 'lat', coordinates.get(1));
+          });
+   
+//Export data to drive for regression analysis
+          Export.table.toDrive({
+          collection: lat_long,
+          description: 'Variables',
+          fileFormat: 'CSV',
+          });
+
+
