@@ -1,0 +1,68 @@
+Absence of alternative stable states in vegetation cover of northeastern India, by Bidyut Sarania, 
+Vishwesha Guttal, Krishnapriya Tamma
+
+Electronic Supplementary Materials 2:  Part A: Code for obtaining remotely sensed satellite data using Google Earth Engine Platform (GEE). 
+Krishnapriya Tamma authored all of the code.
+______________________________________________________________________________________________
+
+2. Obtaining CHIRPS (Climate Hazards Group InfraRed Precipitation with Station Data) Mean Annual Precipitation (MAP) - 
+   this code will calculate mean annual precipitation of India (1989-2019) and export data to the google drive. 
+
+Code link to open directly in web browser- https://code.earthengine.google.com/bcb071e990c5532dadddad460e196c84 
+
+Copy the code below to the GEE code editor and hit run to calculate mean annual precipitation and export to data to google drive.
+//Import CHIRPS Pentad data
+	var chirps = ee.ImageCollection("UCSB-CHG/CHIRPS/PENTAD")
+	// set start and end year
+	var startyear = 1989; 
+	var endyear = 2019; 
+
+	// Define start and end date objects
+	var startdate = ee.Date.fromYMD(startyear,1, 1);
+	var enddate = ee.Date.fromYMD(endyear, 12, 31);
+
+	// Create a list with years
+	var years = ee.List.sequence(startyear, endyear);
+
+	// Import countries feature collection 
+	var countries = ee.FeatureCollection("USDOS/LSIB_SIMPLE/2017");
+ 
+	// Get India boundary using filter 
+	var India = countries.filter(ee.Filter.eq("country_na","India"));
+	var India = India.geometry(); 
+
+	//Sum monthly precipitation data to get total annual precipitation for each year in the dataset
+	var annualPrecip = ee.ImageCollection.fromImages(
+	  years.map(function (year) {
+  	  var annual = chirps
+        .filter(ee.Filter.calendarRange(year, year, 'year'))
+        .sum();
+   	 return annual
+        .set('year', year)
+        .set('system:time_start', ee.Date.fromYMD(year, 1, 1));
+								}));
+
+//Get the mean value of the annual precipitation for all years
+	var annualSum = annualPrecip; // recreating the image collection to avoid rewriting of first dataset
+	print(annualSum);	
+	print(annualSum.first().clip(India));
+	var annualMean = annualPrecip.mean().clip(India);
+
+	//Display mean annual precipitation 
+	var pViz = {
+	 min: 0, 
+ 	 max: 10000, 
+  	 palette: 'orange, green, blue'};
+	 Map.centerObject(India, 5);
+	 Map.addLayer(annualMean, pViz, 'mean annual precipitation');
+
+//Export final mean annual precipitation as a raster to the drive 
+	Export.image.toDrive({
+	image: annualMean,
+	region: India.bounds(),
+	scale: 1000,
+	description: 'India_rainfall',
+	crs:'EPSG:4326',
+	fileFormat: 'GeoTIFF',
+	maxPixels: 1e13
+	}); 
