@@ -1,0 +1,51 @@
+Absence of alternative stable states in vegetation cover of northeastern India, by Bidyut Sarania, 
+Vishwesha Gutta, Krishnapriya Tamma
+
+Electronic Supplementary Materials 2:  Part A: Code for obtaining remotely sensed satellite data using Google Earth Engine Platform (GEE). 
+Krishnapriya Tamma authored all of the code.
+______________________________________________________________________________________________
+
+1. Obtaining MODIS Enhanced Vegetation Index (EVI) data- We prepared the EVI composite for entier India
+
+Code link to open directly in web browser- https://code.earthengine.google.com/3ea426fdfea7157f0de011fc989e1174
+
+Copy the code below to the GEE code editor and hit run to generate composite of EVI and export to data to google drive.
+
+ // Import country feature collection 
+	var countries = ee.FeatureCollection("USDOS/LSIB_SIMPLE/2017"); 
+	// Filter with country name-India
+	var India = countries.filter(ee.Filter.eq("country_na","India"));
+	var India = India.geometry(); 
+	Map.centerObject(India,2); 
+	//Import MODIS image collection 
+	var dataset = ee.ImageCollection('MODIS/MCD43A4_006_EVI')
+              .filter(ee.Filter.date('2019-10-01', '2019-11-30'))
+              .map(function(image){return image.clip(India)}); 
+	var colorized = dataset.select('EVI');
+
+	//Display map with colour palette
+	var colorizedVis = {
+	min: -1,
+  	max: 1.0,
+  	palette: [
+   	 'FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718', '74A901',
+    	'66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01',
+    	'012E01', '011D01', '011301'
+ 	 ],
+	};
+
+//Get greenest composite image 
+	var greenest = dataset.qualityMosaic('EVI');
+	var visParams = {bands: ['B4', 'B3', 'B2'], max: 1};
+
+	//Add map layer to display 
+	Map.addLayer(greenest, colorizedVis, 'Greenest pixel composite');
+
+	//Export final EVI composite raster image to drive
+	Export.image.toDrive({
+	  image: greenest,
+	  description: 'India_EVI_2019',
+ 	 scale: 1000,
+ 	 region: India.bounds(),
+ 	 maxPixels: 1e13
+			});
