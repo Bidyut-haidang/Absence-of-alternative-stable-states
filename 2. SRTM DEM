@@ -1,0 +1,33 @@
+Absence of alternative stable states in vegetation cover of northeastern India, by Bidyut Sarania, 
+Vishwesha Gutta, Krishnapriya Tamma
+
+Electronic Supplementary Materials 2:  Part A: Code for obtaining remotely sensed satellite data using Google Earth Engine Platform (GEE). 
+Krishnapriya Tamma authored all of the code.
+______________________________________________________________________________________________
+
+3. SRTM (Shuttle Radar Topography Mission) digital elevation model (DEM) data- this code will generate DEM for northeast India. 
+
+Code link to open directly in web browser- https://code.earthengine.google.com/3c019b7b9cbb0ac2d3d2935f8c99c733 
+
+Copy the code below to the GEE code editor and hit run to calculate mean annual precipitation and export to data to google drive.
+//Import region of interest 
+	//Var NE = shapefile of northeast India used in paper (A geometry was given as an example for running this code.)
+
+	//Import SRTM data
+	var dataset = ee.Image('USGS/SRTMGL1_003');
+	var elevation = dataset.select('elevation');
+	print(elevation);
+
+	// Display elevation for the region of interest.
+	var visualization_params = {min: 0, max: 6000, palette: 'orange, yellow, white, green, blue'};
+	Map.centerObject(NE);
+	Map.addLayer(elevation.clip(NE),visualization_params, "elevation");
+
+//Export the image, specifying scale and region.
+	Export.image.toDrive({
+	image: elevation.clip(NE),
+  	region: NE,
+  	description: 'Elevation_NE',
+  	scale: 30,
+        maxPixels: 1e13});
+ 
