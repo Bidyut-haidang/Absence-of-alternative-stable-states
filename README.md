@@ -1,4 +1,4 @@
-# trial
+# Absence of alternative stable states
 Code for the paper
 Absence of alternative stable states in vegetation cover of northeastern India, by Bidyut Sarania, 
 Vishwesha Guttal, Krishnapriya Tamma
