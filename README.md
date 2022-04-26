@@ -5,6 +5,7 @@ Vishwesha Guttal, Krishnapriya Tamma
 
 Electronic Supplementary Materials 2:  Part A: Code for obtaining remotely sensed satellite data using Google Earth Engine Platform (GEE). 
 Krishnapriya Tamma authored all of the code. The scripts were all written using the Javascript Earth Engine Code Editor. 
+[![DOI](https://zenodo.org/badge/484301681.svg)](https://zenodo.org/badge/latestdoi/484301681)
 ______________________________________________________________________________________________
 
 To run code on the GEE, please follow these steps-
